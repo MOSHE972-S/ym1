@@ -1,0 +1,68 @@
+# זהו GitHub Actions workflow להרצת סקריפט PHP לעיבוד נתונים מימות המשיח.
+# ה-workflow מופעל ידנית מתוך ממשק GitHub וגם אוטומטית כל 5 דקות.
+
+name: Run Yemot Process
+
+# מגדיר את ה-workflow כך שיופעל ידנית מתוך ממשק GitHub Actions וגם לפי לוח זמנים.
+on:
+  workflow_dispatch:
+    # טריגר זה מאפשר הפעלה ידנית מתוך לשונית Actions.
+    # זמין למשתמשים עם הרשאת Write למאגר.
+    # ניתן להוסיף כאן פרמטרים אם תרצה להעביר קלט ל-workflow בעת ההפעלה הידנית
+    # inputs:
+    #   some_parameter:
+    #     description: 'תיאור הפרמטר'
+    #     required: false
+    #     default: 'ערך ברירת מחדל'
+  schedule:
+    # טריגר זה מריץ את ה-workflow אוטומטית כל 5 דקות.
+    # למידע נוסף על ביטויי cron ב-GitHub Actions:
+    # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+    - cron: '*/5 * * * *'
+
+jobs:
+  run_php_script:
+    # ה-job ירוץ על מערכת הפעלה Ubuntu.
+    runs-on: ubuntu-latest
+
+    steps:
+      # שלב 1: שליפת קוד המקור מהמאגר.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # שלב 2: הגדרת סביבת PHP.
+      # ניתן לשנות את גרסת ה-PHP לפי הצורך.
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1' # או גרסה אחרת מתאימה
+          extensions: json # לוודא שתוסף JSON מופעל (בדרך כלל מופעל כברירת מחדל)
+          # ניתן להוסיף כאן תוספים נוספים אם סקריפט ה-PHP דורש אותם
+
+      # שלב 3: הגדרת משתני הסביבה באופן מאובטח מ-GitHub Secrets.
+      # הערכים נלקחים מ-GitHub Secrets.
+      # ודא שהגדרת את כל הסודות הנדרשים במאגר שלך (YM_TOKEN, YM_API_BASE_URL, וכו').
+      - name: Set Environment Variables from Secrets
+        run: |
+          echo "YM_TOKEN=${{ secrets.YM_TOKEN }}" >> $GITHUB_ENV
+          # אם השתמשת בסודות נוספים עבור כתובות URL או מספרים, ודא שהם מוגדרים כאן:
+          # echo "YM_API_BASE_URL=${{ secrets.YM_API_BASE_URL }}" >> $GITHUB_ENV
+          # echo "YM_YMGR_FILE_PATH=${{ secrets.YM_YMGR_FILE_PATH }}" >> $GITHUB_ENV
+          # echo "YM_ROUTING_YEMOT_NUMBER=${{ secrets.YM_ROUTING_YEMOT_NUMBER }}" >> $GITHUB_ENV
+          # echo "YM_ROUTING_1800_NUMBER=${{ secrets.YM_ROUTING_1800_NUMBER }}" >> $GITHUB_ENV
+        # הערה: שיטה זו בטוחה מכיוון שערכי ה-secrets אינם נחשפים בלוגים.
+
+      # שלב 4: הרצת סקריפט ה-PHP.
+      # יש לוודא ששם הקובץ 2.php תואם לשם הקובץ בפועל במאגר.
+      - name: Run PHP script
+        run: php 1.php
+
+      # שלב 5 (אופציונלי): שמירת קובץ הלוג כ-Artifact.
+      # קובץ הלוג (log.txt) כבר מסונן על ידי סקריפט ה-PHP עצמו.
+      # זה מאפשר לך להוריד את קובץ log.txt לאחר סיום הריצה כדי לבדוק את הלוגים המסוננים.
+      - name: Upload log file
+        uses: actions/upload-artifact@v4
+        with:
+          name: yemot-process-log
+          path: log.txt
+          # ניתן להוסיף retention-days: 5 (לדוגמה) כדי למחוק את ה-artifact לאחר מספר ימים
