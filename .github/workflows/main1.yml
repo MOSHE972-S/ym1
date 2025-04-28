@@ -1,0 +1,42 @@
+# זהו GitHub Actions workflow למחיקת קובץ הלוג.
+# ה-workflow מופעל אוטומטית כל 10 דקות.
+
+name: Delete Log File
+
+# מגדיר את ה-workflow כך שיופעל אוטומטית לפי לוח זמנים.
+on:
+  schedule:
+    # מריץ את ה-workflow כל 10 דקות.
+    # למידע נוסף על ביטויי cron ב-GitHub Actions:
+    # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+    - cron: '*/10 * * * *'
+
+jobs:
+  delete_log_file:
+    # ה-job ירוץ על מערכת הפעלה Ubuntu.
+    runs-on: ubuntu-latest
+
+    steps:
+      # שלב 1: שליפת קוד המקור מהמאגר.
+      # זה נחוץ כדי שה-workflow יוכל לגשת לקובץ log.txt במאגר.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # שלב 2: מחיקת קובץ הלוג.
+      # הפקודה 'rm' מוחקת את הקובץ.
+      # האופציה '-f' מבטיחה שהפקודה לא תיכשל אם הקובץ לא קיים.
+      - name: Delete log.txt
+        run: rm -f log.txt
+
+      # שלב 3 (אופציונלי): ביצוע Commit למחיקה.
+      # אם תרצה שהמחיקה תשתקף במאגר עצמו (כלומר, הקובץ ייעלם מההיסטוריה),
+      # תצטרך להוסיף שלבים נוספים לביצוע commit ו-push.
+      # שימו לב שזה דורש הגדרת הרשאות מתאימות ל-GITHUB_TOKEN או שימוש ב-PAT.
+      # לדוגמה (דורש הרשאות מתאימות):
+      # - name: Commit and push deletion
+      #   run: |
+      #     git config user.name 'github-actions[bot]'
+      #     git config user.email 'github-actions[bot]@users.noreply.github.com'
+      #     git add log.txt
+      #     git commit -m "Delete log.txt file" || echo "No changes to commit"
+      #     git push
