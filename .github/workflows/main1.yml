@@ -5,6 +5,7 @@ name: Delete Log File
 
 # מגדיר את ה-workflow כך שיופעל אוטומטית לפי לוח זמנים.
 on:
+  workflow_dispatch:
   schedule:
     # מריץ את ה-workflow כל 10 דקות.
     # למידע נוסף על ביטויי cron ב-GitHub Actions:
